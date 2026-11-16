@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Binary Calculator</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    height: 100vh;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #131b2e 0%, #060913 100%);
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+  }
+
+  /* حاوية الفضاء ثلاثي الأبعاد */
+  .math-scene-3d {
+    position: fixed;
+    inset: 0;
+    perspective: 700px;
+    transform-style: preserve-3d;
+    overflow: hidden;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .math-symbol {
+    position: absolute;
+    font-weight: bold;
+    color: rgba(0, 242, 254, 0.45);
+    text-shadow: 0 0 12px rgba(0, 242, 254, 0.5);
+    user-select: none;
+    animation: fly3D linear infinite;
+  }
+
+  .math-symbol.operator {
+    color: rgba(168, 85, 247, 0.55);
+    text-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+  }
+
+  .math-symbol.binary {
+    color: rgba(16, 185, 129, 0.5);
+    text-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+  }
+
+  @keyframes fly3D {
+    0% {
+      transform: translate3d(0, 40px, -900px) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+      opacity: 0;
+    }
+    20% { opacity: 0.85; }
+    80% { opacity: 0.85; }
+    100% {
+      transform: translate3d(0, -40px, 650px) rotateX(180deg) rotateY(360deg) rotateZ(45deg);
+      opacity: 0;
+    }
+  }
+
+  .math-symbol:nth-child(1)  { top: 15%; left: 10%; font-size: 2.2rem; animation-duration: 9s;   animation-delay: 0s; }
+  .math-symbol:nth-child(2)  { top: 75%; left: 20%; font-size: 3rem;   animation-duration: 12s;  animation-delay: -2s; }
+  .math-symbol:nth-child(3)  { top: 25%; left: 80%; font-size: 2.5rem; animation-duration: 10s;  animation-delay: -4s; }
+  .math-symbol:nth-child(4)  { top: 80%; left: 75%; font-size: 2rem;   animation-duration: 8s;   animation-delay: -1s; }
+  .math-symbol:nth-child(5)  { top: 45%; left: 15%; font-size: 1.8rem; animation-duration: 11s;  animation-delay: -5s; }
+  .math-symbol:nth-child(6)  { top: 10%; left: 50%; font-size: 2.8rem; animation-duration: 13s;  animation-delay: -3s; }
+  .math-symbol:nth-child(7)  { top: 65%; left: 55%; font-size: 2.4rem; animation-duration: 9.5s; animation-delay: -6s; }
+  .math-symbol:nth-child(8)  { top: 35%; left: 35%; font-size: 3.2rem; animation-duration: 14s;  animation-delay: -7s; }
+  .math-symbol:nth-child(9)  { top: 85%; left: 40%; font-size: 2.1rem; animation-duration: 10.5s;animation-delay: -2.5s; }
+  .math-symbol:nth-child(10) { top: 20%; left: 65%; font-size: 2.6rem; animation-duration: 11.5s;animation-delay: -8s; }
+  .math-symbol:nth-child(11) { top: 55%; left: 85%; font-size: 2.9rem; animation-duration: 8.5s; animation-delay: -1.5s; }
+  .math-symbol:nth-child(12) { top: 50%; left: 50%; font-size: 2.3rem; animation-duration: 12.5s;animation-delay: -4.5s; }
+  .math-symbol:nth-child(13) { top: 12%; left: 28%; font-size: 1.9rem; animation-duration: 9.2s; animation-delay: -3.2s; }
+  .math-symbol:nth-child(14) { top: 70%; left: 88%; font-size: 2.7rem; animation-duration: 13.5s;animation-delay: -6.5s; }
+  .math-symbol:nth-child(15) { top: 38%; left: 70%; font-size: 2.2rem; animation-duration: 10.2s;animation-delay: -5.5s; }
+
+  /* بطاقة الآلة الحاسبة */
+  .calculator-box {
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    padding: 2.2rem;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(0, 242, 254, 0.35);
+    border-radius: 20px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 242, 254, 0.15);
+    text-align: center;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  .calculator-box h1 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(90deg, #00f2fe, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .input-group {
+    margin-bottom: 1rem;
+    text-align: right;
+  }
+
+  .input-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-bottom: 0.4rem;
+  }
+
+  .input-group input,
+  .input-group select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    background: rgba(6, 9, 19, 0.8);
+    color: #00f2fe;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.1rem;
+    font-weight: bold;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-group input:focus,
+  .input-group select:focus {
+    border-color: #a855f7;
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+  }
+
+  .calc-btn {
+    width: 100%;
+    padding: 0.85rem;
+    margin-top: 0.5rem;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #00f2fe, #a855f7);
+    color: #060913;
+    font-size: 1.05rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.2s;
+  }
+
+  .calc-btn:hover {
+    opacity: 0.92;
+    transform: translateY(-2px);
+  }
+
+  .calc-btn:active {
+    transform: translateY(0);
+  }
+
+  /* منطقة عرض الرسائل والنتيجة */
+  .output-area {
+    margin-top: 1.25rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: rgba(6, 9, 19, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 75px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+
+  .status-msg {
+    font-size: 0.85rem;
+    color: #10b981;
+  }
+
+  .status-msg.error {
+    color: #f43f5e;
+  }
+
+  .result-text {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #fff;
+    direction: ltr;
+  }
+</style>
+</head>
+<body>
+
+  <!-- الخلفية ثلاثية الأبعاد -->
+  <div class="math-scene-3d">
+    <span class="math-symbol operator">+</span>
+    <span class="math-symbol binary">10101</span>
+    <span class="math-symbol operator">÷</span>
+    <span class="math-symbol">1 + 1 = 10</span>
+    <span class="math-symbol binary">0110</span>
+    <span class="math-symbol operator">×</span>
+    <span class="math-symbol">∑</span>
+    <span class="math-symbol operator">−</span>
+    <span class="math-symbol binary">1101</span>
+    <span class="math-symbol">0 & 1</span>
+    <span class="math-symbol operator">=</span>
+    <span class="math-symbol">√x</span>
+    <span class="math-symbol binary">10010</span>
+    <span class="math-symbol operator">%</span>
+    <span class="math-symbol">π</span>
+  </div>
+
+  <!-- واجهة الآلة الحاسبة الثنائية -->
+  <div class="calculator-box">
+    <h1>Binary Calculator</h1>
+
+    <div class="input-group">
+      <label for="num1">الرقم الثنائي الأول (num)</label>
+      <input type="text" id="num1" placeholder="مثال: 1010" dir="ltr">
+    </div>
+
+    <div class="input-group">
+      <label for="opear">العملية الحسابية (opear)</label>
+      <select id="opear" dir="ltr">
+        <option value="+">+ (جمع)</option>
+        <option value="-">- (طرح)</option>
+        <option value="*">* (ضرب)</option>
+        <option value="/">/ (قسمة)</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label for="num2">الرقم الثنائي الثاني (num2)</label>
+      <input type="text" id="num2" placeholder="مثال: 0110" dir="ltr">
+    </div>
+
+    <button class="calc-btn" onclick="runCalculator()">احسب الناتج (Calculate)</button>
+
+    <div class="output-area">
+      <div id="hubStatus" class="status-msg">أدخل أرقاماً ثنائية (0 و 1 فقط)</div>
+      <div id="resultOutput" class="result-text">--</div>
+    </div>
+  </div>
+
+<script>
+  // نفس كلاس Binary_Calcoutor الخاص بك محولاً إلى JavaScript ليعمل مع الواجهة
+  class Binary_Calcoutor {
+    constructor(n = 0, m = 0, op = '+') {
+      this.num = n;
+      this.num2 = m;
+      this.opear = op;
+    }
+
+    // تحويل الثنائي إلى عشري
+    toDec(bin) {
+      let dec = 0, base = 1;
+      bin = Math.floor(Math.abs(bin));
+      while (bin > 0) {
+        dec += (bin % 10) * base;
+        bin = Math.floor(bin / 10);
+        base *= 2;
+      }
+      return dec;
+    }
+
+    // تحويل العشري إلى ثنائي
+    toBin(dec) {
+      if (dec === 0) return 0;
+      const isNegative = dec < 0;
+      dec = Math.floor(Math.abs(dec));
+      let bin = 0, base = 1;
+      while (dec > 0) {
+        bin += (dec % 2) * base;
+        dec = Math.floor(dec / 2);
+        base *= 10;
+      }
+      return isNegative ? -bin : bin;
+    }
+
+    is_the_Complete(num, num2) {
+      return this.toBin(this.toDec(num) + this.toDec(num2));
+    }
+
+    is_the_Complete2(num, num2) {
+      return this.toBin(this.toDec(num) - this.toDec(num2));
+    }
+
+    is_the_Complete3(num, num2) {
+      return this.toBin(this.toDec(num) * this.toDec(num2));
+    }
+
+    is_the_Complete4(num, num2) {
+      if (this.toDec(num2) === 0) return null;
+      return this.toBin(Math.floor(this.toDec(num) / this.toDec(num2)));
+    }
+
+    // دالة hub للتحقق أن المدخلات تحتوي على 0 و 1 فقط
+    hub(str1, str2) {
+      const binaryRegex = /^[01]+$/;
+      if (binaryRegex.test(str1) && binaryRegex.test(str2)) {
+        return { valid: true, message: "Valid binary inputs ✓" };
+      } else {
+        return { valid: false, message: "Invalid inputs! Use only 0 and 1." };
+      }
+    }
+
+    show1(num, num2) { return this.is_the_Complete(num, num2); }
+    show2(num, num2) { return this.is_the_Complete2(num, num2); }
+    show3(num, num2) { return this.is_the_Complete3(num, num2); }
+    show4(num, num2) { return this.is_the_Complete4(num, num2); }
+
+    get() {
+      switch (this.opear) {
+        case '+': return `num + num2 = ${this.show1(this.num, this.num2)}`;
+        case '-': return `num - num2 = ${this.show2(this.num, this.num2)}`;
+        case '*': return `num * num2 = ${this.show3(this.num, this.num2)}`;
+        case '/': {
+          const res = this.show4(this.num, this.num2);
+          return res === null ? "Cannot divide by zero!" : `num / num2 = ${res}`;
+        }
+        default: return "Exit the code and finish";
+      }
+    }
+  }
+
+  function runCalculator() {
+    const rawNum1 = document.getElementById("num1").value.trim();
+    const rawNum2 = document.getElementById("num2").value.trim();
+    const opear = document.getElementById("opear").value;
+
+    const hubStatus = document.getElementById("hubStatus");
+    const resultOutput = document.getElementById("resultOutput");
+
+    const calc = new Binary_Calcoutor(Number(rawNum1), Number(rawNum2), opear);
+    const check = calc.hub(rawNum1, rawNum2);
+
+    if (!check.valid) {
+      hubStatus.textContent = check.message;
+      hubStatus.className = "status-msg error";
+      resultOutput.textContent = "Error";
+      return;
+    }
+
+    hubStatus.textContent = check.message;
+    hubStatus.className = "status-msg";
+    resultOutput.textContent = calc.get();
+  }
+</script>
+
+</body>
+</html>
